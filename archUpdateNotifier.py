@@ -1,5 +1,5 @@
 import sys
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 import subprocess
 
 # Arch update tray icon using Qt
@@ -11,6 +11,8 @@ import subprocess
 # Yaourt for AUR updates
 
 #TODO add error checking on system calls
+
+update_check_interval_minutes = 120
 
 def getAURUpdates():
     command = "yaourt -Qua"
@@ -57,6 +59,11 @@ class SystemTrayUpdateNotifier():
         self.trayIcon.setContextMenu(self.menu)
         self.trayIcon.show()
         self.trayIcon.activated.connect(self.clickHandler)
+        
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.checkForUpdates)
+        self.timer.start(update_check_interval_minutes*60*1000)
+        
         
         self.checkForUpdates()
         
