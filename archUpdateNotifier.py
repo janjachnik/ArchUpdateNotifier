@@ -14,22 +14,23 @@ import subprocess
 
 def getAURUpdates():
     command = "yaourt -Qua"
-    output = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE).stdout
+    #output = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE).stdout
+    output = subprocess.check_output(command,shell=True).decode("utf-8").split('\n')
+    print(output)
     updates = []
     for line in output:
-        text = line.decode("utf-8").replace('\n','')
-        name = text.split(' ')[0]
-        # remove "aur/"
-        update = name.split('/')[1]
-        updates.append(update)
+        if line!='':
+            updates.append(line.split(' ')[0].split('/')[1])
     return updates
     
 def getSystemUpdates():
     command = "checkupdates"
-    output = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE).stdout
+    #output = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE).stdout
+    output = subprocess.check_output(command,shell=True).decode("utf-8").split('\n')
     updates = []
     for line in output:
-        updates.append(line.decode("utf-8").replace('\n', ''))
+        if line!='':
+            updates.append(line)
     return updates
     
 def formatData(updates):
@@ -66,6 +67,7 @@ class SystemTrayUpdateNotifier():
         self.aur_updates = getAURUpdates()
         #self.lastChecked = time.now()
         self.setTooltip()
+        self.displayUpdates()
         
     def setTooltip(self):
         minutes = 0
@@ -73,8 +75,11 @@ class SystemTrayUpdateNotifier():
         self.trayIcon.setToolTip(tooltip)
         
     def displayUpdates(self):
+        body = "System Updates:\n" + formatData(self.system_updates)
+        body += "\n\nAUR Updates:\n" + formatData(self.aur_updates)
         print(formatData(self.system_updates))
         print(formatData(self.aur_updates))
+        self.trayIcon.showMessage("Updates available!", body)
         
     def clickHandler(self, reason):
         if reason == QtGui.QSystemTrayIcon.Trigger:
